@@ -15,7 +15,7 @@ type Consumer func(v T)
 type MinCompare func(min T, v T) bool
 type MaxCompare func(max T, v T) bool
 
-type eachFun func(index int, v T) (T, bool, bool)
+type eachFun func(index int, v T,ignore bool) (T, bool, bool,bool)
 type stream struct {
 	values []T
 	stop   bool
@@ -80,16 +80,18 @@ func (stm *stream) AnyMatch(p Predicate) bool {
 
 	fun := func() eachFun {
 
-		return func(index int, v T) (T, bool, bool) {
+		return func(index int, v T,ignore bool) (T, bool, bool,bool) {
 
+			if !ignore {
+				if p(v) {
+					stm.find = true
+					stm.stop = true
+				}
+			}
 			if index == len(stm.values)-1 {
 				stm.stop = true
 			}
-			if p(v) {
-				stm.find = true
-				stm.stop = true
-			}
-			return nil, false, false
+			return nil, false, false,ignore
 		}
 	}
 	stm.items = append(stm.items, fun())
@@ -100,19 +102,20 @@ func (stm *stream) AllMatch(p Predicate) bool {
 
 	fun := func() eachFun {
 		find := true
-		return func(index int, v T) (T, bool, bool) {
+		return func(index int, v T,ignore bool) (T, bool, bool,bool) {
 
-			if !p(v) {
-				find = false
-				stm.stop = true
+			if !ignore {
+				if !p(v) {
+					find = false
+					stm.stop = true
+				}
 			}
-
 			if index == len(stm.values)-1 {
 				stm.find = find
 				stm.stop = true
 			}
 
-			return nil, false, false
+			return nil, false, false,ignore
 		}
 	}
 	stm.items = append(stm.items, fun())
@@ -124,30 +127,35 @@ func (stm *stream) NoneMatch(p Predicate) bool {
 
 	fun := func() eachFun {
 		find := false
-		return func(index int, v T) (T, bool, bool) {
+		return func(index int, v T,ignore bool) (T, bool, bool,bool) {
 
-			if p(v) {
-				find = true
-				stm.stop = true
+			if !ignore {
+				if p(v) {
+					find = true
+					stm.stop = true
+				}
 			}
-
 			if index == len(stm.values)-1 {
 				stm.find = find
 				stm.stop = true
 			}
-			return nil, false, false
+			return nil, false, false,ignore
 		}
 	}
 	stm.items = append(stm.items, fun())
+	stm.handle()
 	return !stm.find
 }
 
 func (stm *stream) FindFirst() T {
 	fun := func() eachFun {
-		return func(index int, v T) (T, bool, bool) {
-			stm.one = v
-			stm.stop = true
-			return nil, false, false
+		return func(index int, v T,ignore bool) (T, bool, bool,bool) {
+			if !ignore {
+				stm.one = v
+				stm.stop = true
+			}
+
+			return nil, false, false,ignore
 		}
 	}
 	stm.items = append(stm.items, fun())
@@ -159,8 +167,11 @@ func (stm *stream) Limit(n int) Stream {
 	fun := func() eachFun {
 
 		temp := make([]T, 0)
-		return func(index int, v T) (T, bool, bool) {
-			temp = append(temp, v)
+		return func(index int, v T,ignore bool) (T, bool, bool,bool) {
+			if !ignore {
+				temp = append(temp, v)
+				ignore = false
+			}
 			if index == len(stm.values)-1 {
 				if n > len(temp) {
 					n = len(temp)
@@ -169,9 +180,9 @@ func (stm *stream) Limit(n int) Stream {
 					n = 0
 				}
 				stm.values = temp[:n]
-				return nil, false, true
+				return nil, false, true,ignore
 			}
-			return nil, false, false
+			return nil, false, false,ignore
 		}
 	}
 	stm.items = append(stm.items, fun())
@@ -185,11 +196,12 @@ func (stm *stream) handle() {
 		if stm.reload {
 			break
 		}
+		var ignore bool
+
 		for indexItem, itemV := range stm.items {
-
-			vn, next, reLoad := itemV(index, v)
+			vn, next, reLoad,ig:= itemV(index, v,ignore)
+			ignore = ig
 			if reLoad {
-
 				if indexItem == len(stm.items)-1 {
 					stm.items = make([]eachFun, 0)
 				} else {
@@ -197,6 +209,9 @@ func (stm *stream) handle() {
 				}
 				stm.reload = true
 				break
+			}
+			if ignore {
+				continue
 			}
 			if !next {
 				break
@@ -217,18 +232,25 @@ func (stm *stream) Filter(p Predicate) Stream {
 	fun := func() eachFun {
 		filtered := false
 
-		return func(index int, v T) (T, bool, bool) {
+		return func(index int, v T,ignore bool) (T, bool, bool,bool) {
+
 			next := false
-			if p(v) {
+			if ignore {
+				return nil, true, false,ignore
+			}
+			pred:=p(v)
+			if pred {
 				filtered = true
 				next = true
 			}
 			if index == len(stm.values)-1 {
 				if !filtered {
 					stm.stop = true
+				}else if !pred{
+					return nil, next, false,true
 				}
 			}
-			return nil, next, false
+			return nil, next, false,ignore
 		}
 	}
 	stm.items = append(stm.items, fun())
@@ -236,8 +258,11 @@ func (stm *stream) Filter(p Predicate) Stream {
 }
 func (stm *stream) Map(f Function) Stream {
 	fun := func() eachFun {
-		return func(index int, v T) (T, bool, bool) {
-			return f(v), true, false
+		return func(index int, v T,ignore bool) (T, bool, bool,bool) {
+			if ignore {
+				return nil, true, false,ignore
+			}
+			return f(v), true, false,ignore
 		}
 	}
 	stm.items = append(stm.items, fun())
@@ -247,18 +272,20 @@ func (stm *stream) Distinct(f Function) Stream {
 
 	fun := func() eachFun {
 		dMap := make(map[T]T, 0)
-		return func(index int, v T) (T, bool, bool) {
-
-			dMap[f(v)] = v
+		return func(index int, v T,ignore bool) (T, bool, bool,bool) {
+			if !ignore {
+				dMap[f(v)] = v
+				ignore = false
+			}
 			if index == len(stm.values)-1 {
 				nv := make([]T, 0)
 				for _, value := range dMap {
 					nv = append(nv, value)
 					stm.values = nv
 				}
-				return nil, false, true
+				return nil, false, true,ignore
 			}
-			return nil, false, false
+			return nil, false, false,ignore
 		}
 	}
 	stm.items = append(stm.items, fun())
@@ -271,14 +298,17 @@ func (stm *stream) Sorted(less Less) Stream {
 			values: make([]T, 0),
 			less:   less,
 		}
-		return func(index int, v T) (T, bool, bool) {
-			dataCollect.values = append(dataCollect.values, v)
+		return func(index int, v T,ignore bool) (T, bool, bool,bool) {
+			if !ignore {
+				dataCollect.values = append(dataCollect.values, v)
+				ignore = false
+			}
 			if index == len(stm.values)-1 {
 				sort.Sort(&dataCollect)
 				stm.values = dataCollect.values
-				return nil, false, true
+				return nil, false, true,ignore
 			}
-			return nil, false, false
+			return nil, false, false,ignore
 		}
 	}
 	stm.items = append(stm.items, fun())
@@ -288,8 +318,11 @@ func (stm *stream) Skip(n int) Stream {
 	fun := func() eachFun {
 
 		temp := make([]T, 0)
-		return func(index int, v T) (T, bool, bool) {
-			temp = append(temp, v)
+		return func(index int, v T,ignore bool) (T, bool, bool,bool) {
+			if !ignore {
+				temp = append(temp, v)
+				ignore = false
+			}
 			if index == len(stm.values)-1 {
 				if n > len(temp) {
 					n = len(temp)
@@ -298,9 +331,9 @@ func (stm *stream) Skip(n int) Stream {
 					n = 0
 				}
 				stm.values = temp[n:]
-				return nil, false, true
+				return nil, false, true,ignore
 			}
-			return nil, false, false
+			return nil, false, false,ignore
 		}
 	}
 	stm.items = append(stm.items, fun())
@@ -308,12 +341,15 @@ func (stm *stream) Skip(n int) Stream {
 }
 func (stm *stream) ForEach(c Consumer) {
 	fun := func() eachFun {
-		return func(index int, v T) (T, bool, bool) {
-			c(v)
+		return func(index int, v T,ignore bool) (T, bool, bool,bool) {
+
+			if !ignore {
+				c(v)
+			}
 			if index == len(stm.values)-1 {
 				stm.stop = true
 			}
-			return nil, false, false
+			return nil, false, false,ignore
 		}
 	}
 	stm.items = append(stm.items, fun())
@@ -322,9 +358,11 @@ func (stm *stream) ForEach(c Consumer) {
 }
 func (stm *stream) Peek(c Consumer) Stream {
 	fun := func() eachFun {
-		return func(index int, v T) (T, bool, bool) {
-			c(v)
-			return nil, true, false
+		return func(index int, v T,ignore bool) (T, bool, bool,bool) {
+			if !ignore {
+				c(v)
+			}
+			return nil, true, false,ignore
 		}
 	}
 	stm.items = append(stm.items, fun())
@@ -334,12 +372,14 @@ func (stm *stream) Peek(c Consumer) Stream {
 func (stm *stream) Collect() []T {
 	fun := func() eachFun {
 		temp := make([]T, 0)
-		return func(index int, v T) (T, bool, bool) {
-			temp = append(temp, v)
+		return func(index int, v T,ignore bool) (T, bool, bool,bool) {
+			if !ignore {
+				temp = append(temp, v)
+			}
 			if index == len(stm.values)-1 {
 				stm.values = temp
 			}
-			return nil, false, false
+			return nil, false, false,ignore
 		}
 	}
 	stm.items = append(stm.items, fun())
@@ -352,14 +392,17 @@ func (stm *stream) Collect() []T {
 
 func (stm *stream) Min(mc MinCompare) T {
 	fun := func() eachFun {
-		return func(index int, v T) (T, bool, bool) {
+		return func(index int, v T,ignore bool) (T, bool, bool,bool) {
+			if ignore {
+				return nil, false, false,ignore
+			}
 			if stm.one == nil {
 				stm.one = v
 			}
 			if mc(stm.one, v) {
 				stm.one = v
 			}
-			return nil, false, false
+			return nil, false, false,ignore
 		}
 	}
 	stm.items = append(stm.items, fun())
@@ -369,14 +412,17 @@ func (stm *stream) Min(mc MinCompare) T {
 }
 func (stm *stream) Max(mc MaxCompare) T {
 	fun := func() eachFun {
-		return func(index int, v T) (T, bool, bool) {
+		return func(index int, v T,ignore bool) (T, bool, bool,bool) {
+			if ignore {
+				return nil, false, false,ignore
+			}
 			if stm.one == nil {
 				stm.one = v
 			}
 			if mc(stm.one, v) {
 				stm.one = v
 			}
-			return nil, false, false
+			return nil, false, false,ignore
 		}
 	}
 	stm.items = append(stm.items, fun())
