@@ -1,4 +1,4 @@
-## Golang gstream lib is like Java 8 stream.
+## Golang stream lib is like Java 8 stream. Only handle slice or array.
 
 ## demo
 
