@@ -8,7 +8,7 @@ import (
 	"testing"
 )
 
-var data =[]person{{age:11,name:"alice"},{age:19,name:"pig"},{age:21,name:"bob"},{age:5,name:"cat"}}
+var data =[]person{{age:11,name:"alice"},{age:19,name:"pig"},{age:5,name:"cat"},{age:21,name:"bob"}}
 
 func TestOf(t *testing.T) {
 

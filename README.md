@@ -3,8 +3,10 @@
 ## demo
 
 ```go
-   var data =[]person{{age:11,name:"alice"},{age:19,name:"pig"},{age:21,name:"bob"},{age:5,name:"cat"}}
-	stream.Of(data).Filter(func(v stream.T) bool {
+
+   var data =[]person{{age:11,name:"alice"},{age:19,name:"pig"},{age:5,name:"cat"},{age:21,name:"bob"}}
+   
+   stream.Of(data).Filter(func(v stream.T) bool {
 		p:=v.(person)
 		return  p.age>10
 	}).Peek(func(v stream.T) {
@@ -64,7 +66,8 @@
 - [x] Limit
 
 
-##ref
+## ref
 
 https://www.cnblogs.com/Dorae/p/7779246.html
+
 https://zhuanlan.zhihu.com/p/33313312
