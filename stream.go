@@ -45,8 +45,11 @@ type Stream interface {
 	Map(f Function) Stream
 	Peek(c Consumer) Stream
 
+
 	//Stateful
 	Sorted(les Less) Stream
+	Distinct(f Function)Stream
+	Skip(n int64)
 	///
 
 	///Terminal ops
@@ -79,6 +82,14 @@ func Of(arr T) Stream {
 		}
 		stm.values = values
 	}
+	return stm
+}
+func (stm *stream)Distinct(f Function)Stream{
+	sk:=&distinct{fun:f}
+	n:=&sinkNode{value:sk}
+	stm.link.next = n
+	stm.link = n
+	sk.me = stm.link
 	return stm
 }
 func (stm *stream)Collect()[]T{
@@ -132,8 +143,8 @@ func (stm *stream) Map(f Function) Stream {
 }
 func (stm *stream)do(){
 
+	stm.head.next.value.Begin(-1)
 	for _,v:=range stm.values{
-		stm.head.next.value.Begin(-1)
 		stm.head.next.value.Accept(v)
 	}
 	stm.head.next.value.End()

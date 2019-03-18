@@ -36,13 +36,12 @@ func (ft *sorted)End() {
 
 	st:=sortData{values:ft.data,les:ft.les}
 	sort.Sort(&st)
-	ft.me.next.value.Begin(int64(len(st.values)))
 
 	for _,v:=range st.values{
-		ft.me.next.value.Accept(v)
 		if ft.me.next.value.CancellationRequested() {
 			break
 		}
+		ft.me.next.value.Accept(v)
 	}
 	ft.me.next.value.End()
 
