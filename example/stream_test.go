@@ -57,7 +57,11 @@ func TestCollect(t *testing.T)  {
 }
 
 func TestCount(t *testing.T)  {
-	fmt.Println(st().Count())
+	fmt.Println(stream.Of(data).Filter(func(v stream.T) bool {
+		p:=v.(person)
+		fmt.Printf("Filter %v\r\n",v)
+		return  p.age>10
+	}).Count())
 }
 func TestAnyMatch(t *testing.T)  {
 	fmt.Println(st().AnyMatch(func(v stream.T) bool {

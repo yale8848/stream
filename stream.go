@@ -23,6 +23,7 @@ type stream struct {
 	reload bool
 	one    T
 	find   bool
+	count int
 }
 
 type sortData struct {
@@ -58,6 +59,7 @@ type Stream interface {
 	AllMatch(p Predicate) bool
 	NoneMatch(p Predicate) bool
 	FindFirst() T
+
 }
 func OfAny(arr ...T)Stream{
 	return Of(arr)
@@ -431,6 +433,17 @@ func (stm *stream) Max(mc MaxCompare) T {
 
 }
 func (stm *stream) Count() int {
+	fun := func() eachFun {
+		return func(index int, v T,ignore bool) (T, bool, bool,bool) {
+			if ignore {
+				return nil, false, false,ignore
+			}
+			stm.count++
+			return nil, false, false,ignore
+		}
+	}
+
+	stm.items = append(stm.items, fun())
 	stm.handle()
-	return len(stm.values)
+	return stm.count
 }
