@@ -6,16 +6,16 @@ type foreach struct {
 	cons Consumer
 }
 
-func (ft *foreach)Begin(size int64)  {
+func (sk *foreach)Begin(size int64)  {
 
 }
-func (ft *foreach)Accept(t T)  {
-	ft.cons(t)
+func (sk *foreach)Accept(t T)  {
+	sk.cons(t)
 }
-func (ft *foreach)End() {
+func (sk *foreach)End() {
 
 }
-func (ft *foreach)CancellationRequested() bool  {
+func (sk *foreach)CancellationRequested() bool  {
 	return  false
 }
 

@@ -5,14 +5,14 @@ type count struct {
 	num int64
 }
 
-func (ft *count)Begin(size int64)  {
+func (sk *count)Begin(size int64)  {
 }
-func (ft *count)Accept(t T)  {
-	ft.num++
+func (sk *count)Accept(t T)  {
+	sk.num++
 }
-func (ft *count)End() {
+func (sk *count)End() {
 }
-func (ft *count)CancellationRequested() bool  {
+func (sk *count)CancellationRequested() bool  {
 	return  false
 }
 

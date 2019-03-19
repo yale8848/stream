@@ -6,7 +6,8 @@
 
    var data =[]person{{age:11,name:"alice"},{age:19,name:"pig"},{age:5,name:"cat"},{age:21,name:"bob"}}
    
-   stream.Of(data).Filter(func(v stream.T) bool {
+   st,_:=stream.Of(data)
+   st.Filter(func(v stream.T) bool {
    		p:=v.(person)
    		fmt.Printf("Filter %v\r\n",v)
    		return  p.age>10
@@ -36,18 +37,16 @@
 
 - [x] Filter 
 - [x] Map
-- [x] peek 
+- [x] Peek 
 
 - [x] Sorted 
 - [x] Distinct 
-- [ ] unordered 
-
 - [x] Skip 
+- [x] Limit
 
+- [ ] unordered 
 - [ ] parallel 
 - [ ] sequential 
-
-
 
 ### Terminal
 
@@ -67,14 +66,10 @@
 - [x] NoneMatch
 - [x] FindFirst
 - [ ] findAny
-- [x] Limit
+
 
 
 ## ref
 
 http://www.cnblogs.com/CarpenterLee/p/6637118.html
-
-https://www.cnblogs.com/Dorae/p/7779246.html
-
-https://zhuanlan.zhihu.com/p/33313312
 

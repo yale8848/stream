@@ -8,19 +8,19 @@ type findFirst struct {
 	cancelRequest bool
 }
 
-func (ft *findFirst)Begin(size int64)  {
+func (sk *findFirst)Begin(size int64)  {
 }
-func (ft *findFirst)Accept(t T)  {
-	ft.value = t
-	ft.count++
-	if ft.count == 1{
-		ft.value = t
-		ft.cancelRequest = true
+func (sk *findFirst)Accept(t T)  {
+	sk.value = t
+	sk.count++
+	if sk.count == 1{
+		sk.value = t
+		sk.cancelRequest = true
 	}
 }
-func (ft *findFirst)End() {
+func (sk *findFirst)End() {
 
 }
-func (ft *findFirst)CancellationRequested() bool  {
-	return  ft.cancelRequest
+func (sk *findFirst)CancellationRequested() bool  {
+	return  sk.cancelRequest
 }

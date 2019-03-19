@@ -25,27 +25,27 @@ type sorted struct {
 	data []T
 }
 
-func (ft *sorted)Begin(size int64)  {
-  ft.data = make([]T,0)
+func (sk *sorted)Begin(size int64)  {
+	sk.data = make([]T,0)
 }
-func (ft *sorted)Accept(t T)  {
-	ft.data = append(ft.data,t)
+func (sk *sorted)Accept(t T)  {
+	sk.data = append(sk.data,t)
 }
-func (ft *sorted)End() {
-	ft.me.next.value.Begin(int64(len(ft.data)))
+func (sk *sorted)End() {
+	sk.me.next.value.Begin(int64(len(sk.data)))
 
-	st:=sortData{values:ft.data,les:ft.les}
+	st:=sortData{values:sk.data,les:sk.les}
 	sort.Sort(&st)
 
 	for _,v:=range st.values{
-		if ft.me.next.value.CancellationRequested() {
+		if sk.me.next.value.CancellationRequested() {
 			break
 		}
-		ft.me.next.value.Accept(v)
+		sk.me.next.value.Accept(v)
 	}
-	ft.me.next.value.End()
+	sk.me.next.value.End()
 
 }
-func (ft *sorted)CancellationRequested() bool  {
+func (sk *sorted)CancellationRequested() bool  {
 	return  false
 }

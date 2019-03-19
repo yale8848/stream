@@ -9,22 +9,24 @@ type distinct struct {
 	fun Function
 }
 
-func (ft *distinct)Begin(size int64)  {
-	ft.mp = make(map[T]T,0)
+func (sk *distinct)Begin(size int64)  {
+	sk.mp = make(map[T]T,0)
 }
-func (ft *distinct)Accept(t T)  {
-	ft.mp[ft.fun(t)] = t
+func (sk *distinct)Accept(t T)  {
+	sk.mp[sk.fun(t)] = t
 }
-func (ft *distinct)End() {
-
-
-	ft.me.next.value.Begin(int64(len(ft.mp)))
-	for _,v:=range ft.mp{
-		ft.me.next.value.Accept(v)
+func (sk *distinct)End() {
+    next:=sk.me.next.value
+	next.Begin(int64(len(sk.mp)))
+	for _,v:=range sk.mp{
+		if next.CancellationRequested() {
+			break
+		}
+		next.Accept(v)
 	}
-	ft.me.next.value.End()
+	next.End()
 
 }
-func (ft *distinct)CancellationRequested() bool  {
+func (sk *distinct)CancellationRequested() bool  {
 	return  false
 }

@@ -6,47 +6,36 @@ type skip struct {
 	num uint64
 	cancelRequest bool
 	value []T
-
-	len int64
 	count int64
 }
 
-func (ft *skip)Begin(size int64)  {
+func (sk *skip)Begin(size int64)  {
 
-	if size == 0 {
-		ft.cancelRequest = true
-	}else if size == -1 {
-		ft.value = make([]T,ft.len)
-	}else {
-		if size <= int64(ft.num) {
-			ft.cancelRequest = true
-		}else{
-			ft.len = size-int64(ft.num)
-			ft.value =  make([]T,ft.len)
-		}
+	if size >=0 && size <= int64(sk.num) {
+		sk.cancelRequest = true
+	}else{
+		sk.value =  make([]T,0)
+	}
+
+}
+func (sk *skip)Accept(t T)  {
+	sk.count++
+	if sk.count>int64(sk.num) {
+		sk.value = append(sk.value,t)
 	}
 }
-func (ft *skip)Accept(t T)  {
-	if ft.num == 0 {
-		if ft.len == 0 {
-			ft.value =append(ft.value,t)
-		}else{
-			ft.value[ft.count] = t
-		}
-	}
-}
-func (ft *skip)End() {
+func (sk *skip)End() {
 
-	ft.me.value.Begin(int64(len(ft.value)))
+	sk.me.next.value.Begin(int64(len(sk.value)))
 
-	for _,v:=range ft.value{
-		if ft.me.next.value.CancellationRequested() {
+	for _,v:=range sk.value{
+		if sk.me.next.value.CancellationRequested() {
 			break
 		}
-		ft.me.next.value.Accept(v)
+		sk.me.next.value.Accept(v)
 	}
-	ft.me.value.End()
+	sk.me.next.value.End()
 }
-func (ft *skip)CancellationRequested() bool  {
-	return  ft.cancelRequest
+func (sk *skip)CancellationRequested() bool  {
+	return  sk.cancelRequest
 }

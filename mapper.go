@@ -7,19 +7,21 @@ type mapper struct {
 	fun Function
 }
 
-func (ft *mapper)Begin(size int64)  {
-	ft.me.next.value.Begin(size)
+func (sk *mapper)Begin(size int64)  {
+	sk.me.next.value.Begin(size)
 }
-func (ft *mapper)Accept(t T)  {
-	ft.me.next.value.Accept(ft.fun(t))
+func (sk *mapper)Accept(t T)  {
 
-}
-func (ft *mapper)End() {
-	if ft.me.next!=nil{
-		ft.me.next.value.End()
+	if !sk.me.next.value.CancellationRequested() {
+		sk.me.next.value.Accept(sk.fun(t))
 	}
 }
-func (ft *mapper)CancellationRequested() bool  {
+func (sk *mapper)End() {
+	if sk.me.next!=nil{
+		sk.me.next.value.End()
+	}
+}
+func (sk *mapper)CancellationRequested() bool  {
 	return  false
 }
 

@@ -7,20 +7,22 @@ type filter struct {
 	pre Predicate
 }
 
-func (ft *filter)Begin(size int64)  {
-	ft.me.next.value.Begin(size)
+func (sk *filter)Begin(size int64)  {
+	sk.me.next.value.Begin(size)
 }
-func (ft *filter)Accept(t T)  {
-	if ft.pre(t) {
-		ft.me.next.value.Accept(t)
+func (sk *filter)Accept(t T)  {
+	next:=sk.me.next.value
+	if sk.pre(t) {
+		if !next.CancellationRequested() {
+			next.Accept(t)
+		}
 	}
 }
-func (ft *filter)End() {
-	if ft.me.next!=nil{
-		ft.me.next.value.End()
+func (sk *filter)End() {
+	if sk.me.next!=nil{
+		sk.me.next.value.End()
 	}
-
 }
-func (ft *filter)CancellationRequested() bool  {
+func (sk *filter)CancellationRequested() bool  {
 	return  false
 }

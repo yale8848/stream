@@ -2,20 +2,21 @@
 package stream
 
 import (
+	"errors"
 	"reflect"
 )
 
+
+type sinkNode struct {
+	value sink
+	next *sinkNode
+}
 
 type sink interface {
 	Begin(size int64)
 	Accept(t T)
 	End()
 	CancellationRequested() bool
-}
-
-type sinkNode struct {
-	value sink
-	next *sinkNode
 }
 
 type T interface{}
@@ -49,7 +50,8 @@ type Stream interface {
 	//Stateful
 	Sorted(les Less) Stream
 	Distinct(f Function)Stream
-	Skip(n int64)
+	Skip(num uint64)Stream
+	Limit(num uint64)Stream
 	///
 
 	///Terminal ops
@@ -57,17 +59,23 @@ type Stream interface {
 	ForEach(c Consumer)
 	Count() int64
 	Collect()[]T
+	Min(min MinCompare)T
+	Max(max MaxCompare)T
 
 	//Short-circuiting
 	FindFirst()T
+	AnyMatch(pre Predicate)bool
+	AllMatch(pre Predicate)bool
+	NoneMatch(pre Predicate)bool
+
 	///
 	do()
 
 }
-func OfAny(arr ...T)Stream{
+func OfAny(arr ...T)(Stream,error){
 	return Of(arr)
 }
-func Of(arr T) Stream {
+func Of(arr T) (Stream,error) {
 	link:=&sinkNode{}
 	stm := &stream{link:link}
 	stm.head = link
@@ -81,7 +89,61 @@ func Of(arr T) Stream {
 			values[i] = v.Interface()
 		}
 		stm.values = values
+	}else{
+		return nil,errors.New("value must Array or Slice")
 	}
+	return stm,nil
+}
+func (stm *stream)AllMatch(pre Predicate)bool{
+	sk:=&allMatch{pre:pre}
+	n:=&sinkNode{value:sk}
+	stm.link.next = n
+	stm.do()
+	return sk.value
+}
+func (stm *stream)NoneMatch(pre Predicate)bool{
+	sk:=&noneMatch{pre:pre}
+	n:=&sinkNode{value:sk}
+	stm.link.next = n
+	stm.do()
+	return sk.value
+}
+func (stm *stream)AnyMatch(pre Predicate)bool{
+	sk:=&anyMatch{pre:pre}
+	n:=&sinkNode{value:sk}
+	stm.link.next = n
+	stm.do()
+	return sk.value
+}
+func (stm *stream) Max(m MaxCompare)T {
+	sk:=&max{compare:m}
+	n:=&sinkNode{value:sk}
+	stm.link.next = n
+	stm.do()
+	return sk.value
+}
+func (stm *stream) Min(m MinCompare)T {
+	sk:=&min{compare:m}
+	n:=&sinkNode{value:sk}
+	stm.link.next = n
+	stm.do()
+	return sk.value
+}
+
+func (stm *stream)Limit(num uint64)Stream{
+	sk:=&limit{num:num}
+	n:=&sinkNode{value:sk}
+	stm.link.next = n
+	stm.link = n
+	sk.me = stm.link
+	return stm
+}
+func (stm *stream)Skip(num uint64)Stream{
+	sk:=&skip{num:num}
+	n:=&sinkNode{value:sk}
+	stm.link.next = n
+	stm.link = n
+	sk.me = stm.link
 	return stm
 }
 func (stm *stream)Distinct(f Function)Stream{
