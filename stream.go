@@ -20,7 +20,7 @@ type sink interface {
 }
 
 type TS func([]T)
-
+type ErrMsg func(recoverErr interface{})
 type T interface{}
 
 type Sum func(v T) int64
@@ -79,6 +79,7 @@ type Stream interface {
 	///
 	do()
 	Group(num uint64,fun TS)
+	GroupRoutine(num uint64,fun TS,err ErrMsg)
 
 
 }
@@ -88,6 +89,12 @@ func (stm *stream)Sum(s Sum)int64{
 	stm.link.next = n
 	stm.do()
 	return  sk.num
+}
+func (stm *stream)GroupRoutine(num uint64,fun TS,err ErrMsg){
+	sk:=&groupRoutine{num:num,fun:fun,err:err}
+	n:=&sinkNode{value:sk}
+	stm.link.next = n
+	stm.do()
 }
 func (stm *stream)Group(num uint64,fun TS){
 	sk:=&group{num:num,fun:fun}

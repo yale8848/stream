@@ -94,6 +94,13 @@ func TestGroup(t *testing.T)  {
 		fmt.Println(ts)
 	})
 }
+func TestGroupRoutine(t *testing.T)  {
+	st().GroupRoutine(2, func(ts []stream.T) {
+		fmt.Println(ts)
+	}, func(err interface{}) {
+		fmt.Println(err)
+	})
+}
 func TestSum(t *testing.T)  {
 	fmt.Println(st().Sum(func(v stream.T) int64 {
 		v1:=v.(person)
