@@ -1,5 +1,13 @@
 ## Golang stream lib is like Java 8 stream. Only handle slice or array.
 
+## get
+
+
+```
+go get github.com/yale8848/stream
+
+```
+
 ## demo
 
 ```go
