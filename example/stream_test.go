@@ -89,3 +89,14 @@ func TestNoneMatch(t *testing.T)  {
 		return strings.Contains(v1.name,"I")
 	}))
 }
+func TestGroup(t *testing.T)  {
+	st().Group(7, func(ts []stream.T) {
+		fmt.Println(ts)
+	})
+}
+func TestSum(t *testing.T)  {
+	fmt.Println(st().Sum(func(v stream.T) int64 {
+		v1:=v.(person)
+		return int64(v1.age)
+	}))
+}

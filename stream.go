@@ -19,7 +19,11 @@ type sink interface {
 	CancellationRequested() bool
 }
 
+type TS func([]T)
+
 type T interface{}
+
+type Sum func(v T) int64
 
 type Predicate func(v T) bool
 
@@ -52,6 +56,9 @@ type Stream interface {
 	Distinct(f Function)Stream
 	Skip(num uint64)Stream
 	Limit(num uint64)Stream
+
+
+
 	///
 
 	///Terminal ops
@@ -61,6 +68,7 @@ type Stream interface {
 	Collect()[]T
 	Min(min MinCompare)T
 	Max(max MaxCompare)T
+	Sum(s Sum)int64
 
 	//Short-circuiting
 	FindFirst()T
@@ -70,8 +78,24 @@ type Stream interface {
 
 	///
 	do()
+	Group(num uint64,fun TS)
+
 
 }
+func (stm *stream)Sum(s Sum)int64{
+	sk:=&sum{s:s}
+	n:=&sinkNode{value:sk}
+	stm.link.next = n
+	stm.do()
+	return  sk.num
+}
+func (stm *stream)Group(num uint64,fun TS){
+	sk:=&group{num:num,fun:fun}
+	n:=&sinkNode{value:sk}
+	stm.link.next = n
+	stm.do()
+}
+
 func OfAny(arr ...T)(Stream,error){
 	return Of(arr)
 }
