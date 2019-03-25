@@ -32,8 +32,9 @@ func st() stream.Stream  {
 
 func TestForEach(t *testing.T) {
 	st:=st()
-	st.ForEach(func(v stream.T) {
+	st.ForEach(func(v stream.T)bool {
 		fmt.Printf("ForEach %v\r\n",v)
+		return true
 	})
 }
 func TestCount(t *testing.T)  {

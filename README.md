@@ -33,8 +33,9 @@ go get github.com/yale8848/stream
    		p:=v.(person)
    		fmt.Printf("Distinct %v\r\n",v)
    		return p.name
-   	}).ForEach(func(v stream.T) {
+   	}).ForEach(func(v stream.T) bool {
       		fmt.Printf("ForEach %v\r\n",v)
+      		return true
       	})
 
 ```
