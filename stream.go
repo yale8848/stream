@@ -31,6 +31,8 @@ type Function func(v T) T
 
 type Consumer func(v T)
 
+type ConsumerCancel func(v T) bool
+
 type Less func(v1, v2 T) bool
 
 type MinCompare func(min T, v T) bool
@@ -63,7 +65,7 @@ type Stream interface {
 
 	///Terminal ops
 	//None Short-circuiting
-	ForEach(c Consumer)
+	ForEach(c ConsumerCancel)
 	Count() int64
 	Collect()[]T
 	Min(min MinCompare)T
@@ -243,7 +245,7 @@ func (stm *stream)do(){
 	stm.head.next.value.End()
 
 }
-func (stm *stream) ForEach(c Consumer) {
+func (stm *stream) ForEach(c ConsumerCancel) {
 	sk:=&foreach{cons:c}
 	n:=&sinkNode{value:sk}
 	stm.link.next = n

@@ -3,20 +3,23 @@ package stream
 
 
 type foreach struct {
-	cons Consumer
+	cons ConsumerCancel
+	cancelRequest bool
 }
 
 func (sk *foreach)Begin(size int64)  {
 
 }
 func (sk *foreach)Accept(t T)  {
-	sk.cons(t)
+	if !sk.cons(t) {
+		sk.cancelRequest = true
+	}
 }
 func (sk *foreach)End() {
 
 }
 func (sk *foreach)CancellationRequested() bool  {
-	return  false
+	return  sk.cancelRequest
 }
 
 
