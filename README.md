@@ -4,7 +4,7 @@
 
 
 ```
-go get github.com/yale8848/stream
+go get github.com/yale8848/stream@v1.3.1
 
 ```
 
