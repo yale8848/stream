@@ -80,7 +80,10 @@ type Stream interface {
 
 	///
 	do()
+
+	///
 	Group(num uint64,fun TS)
+	GroupStrings(num uint64,fun func([]string))
 	GroupRoutine(num uint64,fun TS,err ErrMsg)
 
 
@@ -104,7 +107,12 @@ func (stm *stream)Group(num uint64,fun TS){
 	stm.link.next = n
 	stm.do()
 }
-
+func (stm *stream)GroupStrings(num uint64,fun func([]string)){
+	sk:=&groupStrings{num:num,fun:fun}
+	n:=&sinkNode{value:sk}
+	stm.link.next = n
+	stm.do()
+}
 func OfAny(arr ...T)(Stream,error){
 	return Of(arr)
 }
