@@ -39,7 +39,7 @@ type MinCompare func(min T, v T) bool
 type MaxCompare func(max T, v T) bool
 
 type stream struct {
-	values []T
+	values reflect.Value
 	link *sinkNode
 	head *sinkNode
 }
@@ -123,13 +123,7 @@ func Of(arr T) (Stream,error) {
 
 	tp := reflect.TypeOf(arr)
 	if tp.Kind() == reflect.Array || tp.Kind() == reflect.Slice {
-		arrValue := reflect.ValueOf(arr)
-		values := make([]T, arrValue.Len())
-		for i := 0; i < len(values); i++ {
-			v := arrValue.Index(i)
-			values[i] = v.Interface()
-		}
-		stm.values = values
+		stm.values = reflect.ValueOf(arr)
 	}else{
 		return nil,errors.New("value must Array or Slice")
 	}
@@ -247,11 +241,9 @@ func (stm *stream) Map(f Function) Stream {
 func (stm *stream)do(){
 
 	stm.head.next.value.Begin(-1)
-	for _,v:=range stm.values{
-		stm.head.next.value.Accept(v)
+	for i := 0; i < stm.values.Len(); i++ {
+		stm.head.next.value.Accept(stm.values.Index(i).Interface())
 	}
-	stm.head.next.value.End()
-
 }
 func (stm *stream) ForEach(c ConsumerCancel) {
 	sk:=&foreach{cons:c}
