@@ -108,3 +108,26 @@ func TestSum(t *testing.T)  {
 		return int64(v1.age)
 	}))
 }
+
+
+func TestReduce(t *testing.T) {
+	s, _ := stream.Of(data)
+	reduce := s.Filter(func(v stream.T) bool {
+		return v.(person).age > 5
+	}).Reduce(0, func(x, y stream.T) stream.T {
+		return x.(int) + y.(person).age
+	})
+	fmt.Printf("TestReduce result is %d", reduce)
+}
+
+func TestReduce2(t *testing.T) {
+	s, _ := stream.Of(data)
+	reduce := s.Filter(func(v stream.T) bool {
+		return v.(person).age > 5
+	}).Map(func(v stream.T) stream.T {
+		return v.(person).age
+	}).Reduce(0, func(x, y stream.T) stream.T {
+		return x.(int) + y.(int)
+	})
+	fmt.Printf("TestReduce2 result is %d", reduce)
+}

@@ -38,6 +38,8 @@ type Less func(v1, v2 T) bool
 type MinCompare func(min T, v T) bool
 type MaxCompare func(max T, v T) bool
 
+type BinaryOperator func(x, y T) T
+
 type stream struct {
 	values reflect.Value
 	link *sinkNode
@@ -71,6 +73,7 @@ type Stream interface {
 	Min(min MinCompare)T
 	Max(max MaxCompare)T
 	Sum(s Sum)int64
+	Reduce(identity T, r BinaryOperator) T
 
 	//Short-circuiting
 	FindFirst()T
@@ -258,4 +261,12 @@ func (stm *stream) Count() int64 {
 	stm.link.next = n
 	stm.do()
 	return sk.num
+}
+
+func (stm *stream) Reduce(identity T, r BinaryOperator) T {
+	sk:=&reduce{identity: identity, r: r}
+	n:=&sinkNode{value:sk}
+	stm.link.next = n
+	stm.do()
+	return sk.result
 }

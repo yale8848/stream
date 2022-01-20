@@ -68,6 +68,7 @@ go get github.com/yale8848/stream@v1.3.1
 - [x] Count
 - [ ] iterator
 - [x] Sum
+- [x] Reduce
 
 
 ### Short-circuiting
